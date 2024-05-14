@@ -1,4 +1,5 @@
 #include <common.h>
+#include <pthread.h>
 
 void parse_packet(char* packet, char *code, char* message);
 void chat(struct Client *client);
@@ -28,6 +29,7 @@ int main(){
     }
     printf("server listening on port 1337\n");
 
+    pthread_mutex_init(&clients.mutex, NULL);
     clients.size = 0;
     clients.head = clients.tail = NULL;
 

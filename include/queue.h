@@ -8,6 +8,7 @@ typedef struct Queue{
     struct Client *head;
     struct Client *tail;
     int size;
+    pthread_mutex_t mutex;
 }Queue;
 
 Queue queue_push(Queue queue, struct Client *client);

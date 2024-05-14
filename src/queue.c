@@ -1,6 +1,9 @@
 #include <common.h>
+#include <pthread.h>
 
 Queue queue_push(Queue queue, struct Client *client){
+    pthread_mutex_lock(&queue.mutex);
+
     client->next = NULL;
 
     if(queue.size == 0)
@@ -11,10 +14,13 @@ Queue queue_push(Queue queue, struct Client *client){
     }
 
     queue.size++;
+
+    pthread_mutex_unlock(&queue.mutex);
     return queue;
 }
 
 Queue queue_pop(Queue queue){
+    pthread_mutex_lock(&queue.mutex);
 
     if(!queue.size)
         return queue;
@@ -24,10 +30,12 @@ Queue queue_pop(Queue queue){
     free(tmp);
 
     queue.size--;
+    pthread_mutex_unlock(&queue.mutex);
     return queue;
 }
 
 Queue queue_remove(Queue queue, struct Client *client){
+    pthread_mutex_lock(&queue.mutex);
     if (queue.head->sc == client->sc) {
         queue.head = queue.head->next;
         return queue;
@@ -44,16 +52,20 @@ Queue queue_remove(Queue queue, struct Client *client){
     }
     free(current);
     queue.size--;
+
+    pthread_mutex_unlock(&queue.mutex);
     return queue;
 }
 
 void print_queue(Queue queue){
+    pthread_mutex_lock(&queue.mutex);
     struct Client *current = queue.head;
     while(current != NULL){
         printf("%s --> ",current->username); 
         current = current->next;
     } 
     printf("\n");
+    pthread_mutex_unlock(&queue.mutex);
     free(current);
 }
 
