@@ -28,11 +28,11 @@ int main(){
         fprintf(stderr,"COULDN'T LOG IN");
         exit(-1);
     }
+
     if(0 > messaging(sc)){
         fprintf(stderr,"SESSION CLOSED UNEXPECTEDLY");
         exit(-1);
     }
-
     close(sc);
 }
 
@@ -40,7 +40,8 @@ int login(int sc){
     int packet_count = 0;
     size_t char_count = 0;
     char *username = malloc(char_count);
-    char *packet, *error;
+    char *packet = malloc(char_count);
+    char *error = malloc(2*CODE_LEN);
 
     printf("enter username: ");
     if(0 > getline(&username, &char_count, stdin)){
@@ -59,6 +60,7 @@ int login(int sc){
     recv(sc, error, CODE_LEN, 0);
     if (strncmp(error, SUCCESS, CODE_LEN))
         return 0; 
+
     return 1;
 }
 
@@ -68,11 +70,11 @@ int messaging(int sc){
     int send_return;
     int recv_return;
 
-    pthread_create(&send, NULL, (void*)sending , sc);
+    pthread_create(&send, NULL, (void*)sending, sc);
     pthread_create(&receive, NULL, (void*)receiving, sc);
 
-    pthread_join(send, (void**) &send_return);
     pthread_join(receive, (void**) &recv_return);
+    pthread_join(send, (void**) &send_return);
 
     if(0 > send_return){
         return -1;
