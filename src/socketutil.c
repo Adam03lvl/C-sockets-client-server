@@ -1,6 +1,4 @@
-#include "../headers/socketutil.h"
-#include <netinet/in.h>
-#include <string.h>
+#include <common.h>
 
 struct sockaddr_in *create_address(char* ipv4, int port){
     struct sockaddr_in *address = malloc(sizeof(struct sockaddr_in));

@@ -2,8 +2,8 @@
 
 int login(int sc);
 int messaging(int sc);
-int sending(int sc);
-int receiving(int sc);
+int send_message(int sc);
+int receive_message(int sc);
 char *generate_packet(char* code, char* message, int *packet_count);
 
 int main(){
@@ -70,8 +70,8 @@ int messaging(int sc){
     int send_return;
     int recv_return;
 
-    pthread_create(&send, NULL, (void*)sending, sc);
-    pthread_create(&receive, NULL, (void*)receiving, sc);
+    pthread_create(&send, NULL, (void*) send_message, (void*) sc);
+    pthread_create(&receive, NULL, (void*) receive_message, (void*) sc);
 
     pthread_join(receive, (void**) &recv_return);
     pthread_join(send, (void**) &send_return);
@@ -86,7 +86,7 @@ int messaging(int sc){
     return 0;
 }
 
-int sending(int sc){
+int send_message(int sc){
     char *message, *error, *packet;
     int packet_length = 0;
     size_t line_size = 0;
@@ -106,12 +106,12 @@ int sending(int sc){
     return 0;
 }
 
-int receiving(int sc){
+int receive_message(int sc){
     char *message, *error, *packet;
     char *buffer = malloc(1024);
     size_t char_count;
 
-    while ((char_count = recv(sc, buffer, 1024, 0)) > 0) {
+    while ((char_count = recv(sc, buffer, 1024, 0)) >= CODE_LEN) {
         buffer[char_count] = 0;
         printf("%s", buffer); 
         if(!strncmp(buffer, EXIT, CODE_LEN)){

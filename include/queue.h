@@ -1,8 +1,8 @@
-struct Client{
+typedef struct Client{
     int sc;
     char username[30];
     struct Client *next; 
-};
+} Client;
 
 typedef struct Queue{ 
     struct Client *head;

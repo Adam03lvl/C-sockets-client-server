@@ -1,7 +1,6 @@
 #include <common.h>
-#include <pthread.h>
 
-Queue queue_push(Queue queue, struct Client *client){
+Queue queue_push(Queue queue, Client *client){
     pthread_mutex_lock(&queue.mutex);
 
     client->next = NULL;
@@ -25,7 +24,7 @@ Queue queue_pop(Queue queue){
     if(!queue.size)
         return queue;
 
-    struct Client *tmp = queue.head;
+    Client *tmp = queue.head;
     queue.head = queue.head->next;
     free(tmp);
 
@@ -34,38 +33,43 @@ Queue queue_pop(Queue queue){
     return queue;
 }
 
-Queue queue_remove(Queue queue, struct Client *client){
+Queue queue_remove(Queue queue, Client *client){
     pthread_mutex_lock(&queue.mutex);
-    if (queue.head->sc == client->sc) {
+    
+    if (queue.head && queue.head->sc == client->sc) {
+        Client *tmp = queue.head;
         queue.head = queue.head->next;
+        if (queue.head == NULL)
+            queue.tail = NULL;
+        free(tmp);
+        queue.size--;
+        pthread_mutex_unlock(&queue.mutex);
         return queue;
     }
-
-    struct Client *current = queue.head;
-    while (current->next != NULL) {
+    
+    Client *current = queue.head;
+    while (current && current->next) {
         if(current->next->sc == client->sc){
-            struct Client *tmp = client;
-            current->next = client->next;
-            free(tmp); 
+            Client *tmp = current->next;
+            current->next = tmp->next;
+            if (tmp == queue.tail)
+                queue.tail = current;
+            free(tmp);
+            queue.size--;
+            break;
         }
         current = current->next;
     }
-    free(current);
-    queue.size--;
-
+    
     pthread_mutex_unlock(&queue.mutex);
     return queue;
 }
 
 void print_queue(Queue queue){
-    pthread_mutex_lock(&queue.mutex);
-    struct Client *current = queue.head;
+    Client *current = queue.head;
     while(current != NULL){
         printf("%s --> ",current->username); 
         current = current->next;
     } 
     printf("\n");
-    pthread_mutex_unlock(&queue.mutex);
-    free(current);
 }
-

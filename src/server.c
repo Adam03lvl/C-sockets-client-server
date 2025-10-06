@@ -1,10 +1,9 @@
 #include <common.h>
-#include <pthread.h>
 
 void parse_packet(char* packet, char *code, char* message);
-void chat(struct Client *client);
-void broadcast_message(struct Client *client, char* message);
-void thread_connection(struct Client *client);
+void chat(Client *client);
+void broadcast_message(Client *client, char* message);
+void thread_connection(Client *client);
 int connection(int sc);
 
 Queue clients;
@@ -17,7 +16,7 @@ int main(){
         return -1;
     }
 
-    struct sockaddr_in *server_address = create_address("", 1337);
+    struct sockaddr_in *server_address = create_address("", PORT);
     if(0 > bind(sc, (struct sockaddr*) server_address, sizeof(*server_address))){
         fprintf(stderr,"Error binding socket");
         return -1;
@@ -27,17 +26,18 @@ int main(){
         fprintf(stderr,"Error initializing listen");
         return -1;
     }
-    printf("server listening on port 1337\n");
+    printf("server listening on port %d\n", PORT);
 
     pthread_mutex_init(&clients.mutex, NULL);
     clients.size = 0;
     clients.head = clients.tail = NULL;
 
     while(1){
-        struct Client *client = malloc(sizeof(struct Client));
+        Client *client = malloc(sizeof(Client));
         client->sc = connection(sc);
         // printf("connected to client %d\n", client->sc);
         clients = queue_push(clients, client);
+        print_queue(clients);
         thread_connection(client);
     }
 
@@ -57,13 +57,13 @@ int connection(int sc){
     return clientsc;
 }
 
-void thread_connection(struct Client *client){
-    // printf("creating thread\n");
+void thread_connection(Client *client){
     pthread_t thread_id;
     pthread_create(&thread_id, NULL, (void*) chat, client);
+    pthread_detach(thread_id);
 }
 
-void chat(struct Client *client){
+void chat(Client *client){
     char *buffer = malloc(1024);
     char *message = malloc(1024);
     char *code = malloc(4);
@@ -75,17 +75,16 @@ void chat(struct Client *client){
 
         if (!strcmp(code, LOGIN)) {
             strncpy(client->username, message, 30);
-            sprintf(message,"--------- %s JOINED ---------\n", client->username);
+            sprintf(message,"\n--------- %s JOINED ---------\n\n", client->username);
             send(client->sc, SUCCESS, CODE_LEN, 0);
             broadcast_message(client, message);
         }else if (!strcmp(code, EXIT)) {
-            sprintf(message,"--------- %s LEFT ---------\n", client->username);
+            sprintf(message,"\n--------- %s LEFT ---------\n\n", client->username);
             send(client->sc, EXIT, CODE_LEN, 0);
             broadcast_message(client, message);
-            print_queue(clients);
-            close(client->sc);
             clients = queue_remove(clients, client);
-            return;
+            print_queue(clients);
+            break;
         }else if (!strcmp(code, SUCCESS)) {
             buffer[char_count] = 0;
             char* packet = malloc(1055);
@@ -100,13 +99,14 @@ void chat(struct Client *client){
     free(message);
 }
 
-void broadcast_message(struct Client *client, char* packet){
-    struct Client *current = NULL;
+void broadcast_message(Client *client, char* packet){
+    Client *current = NULL;
     current = clients.head;
-    printf("sending: %s ", packet);
+    printf("---------------------\n");
+    printf("Sending: %s", packet);
     while (current != NULL) {
         if (current->sc != client->sc) {
-            printf("    to : %s\n", current->username);
+            printf("    To : %s\n", current->username);
             send(current->sc, packet, strlen(packet), 0);
         } 
         current = current->next;

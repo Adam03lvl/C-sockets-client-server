@@ -6,7 +6,8 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include "socketutil.h"
-#include "queue.h"
+#include <socketutil.h>
+#include <queue.h>
 
 #define IP "127.0.0.1"
+#define PORT 1337
