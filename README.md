@@ -24,8 +24,6 @@ make
 ./server
 ```
 
-The server will listen on port **8080** by default.
-
 ### Running the Client
 
 ```bash
