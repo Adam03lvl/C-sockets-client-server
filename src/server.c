@@ -35,7 +35,6 @@ int main(){
     while(1){
         Client *client = malloc(sizeof(Client));
         client->sc = connection(sc);
-        // printf("connected to client %d\n", client->sc);
         clients = queue_push(clients, client);
         print_queue(clients);
         thread_connection(client);
@@ -70,7 +69,7 @@ void chat(Client *client){
 
     size_t char_count;
     while((char_count = recv(client->sc, buffer, 1024, 0)) > 0 ){
-        // printf("packet received: %s\nsize: %d\n", buffer, (int)char_count);
+
         parse_packet(buffer, code, message);
 
         if (!strcmp(code, LOGIN)) {

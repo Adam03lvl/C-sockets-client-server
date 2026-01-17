@@ -6,15 +6,21 @@ int send_message(int sc);
 int receive_message(int sc);
 char *generate_packet(char* code, char* message, int *packet_count);
 
-int main(){
+int main(int argc, char** argv){
     printf("welcome to chatapp\n");
-    int sc = socket(AF_INET, SOCK_STREAM,0);
-    if(0 > sc){
-        perror("socket");
+
+    if(argc != 2){
+        perror("USAGE: client <SERVER_ADDRESS>");
         return -1;
     }
 
-    struct sockaddr_in *server_address = create_address(IP,1337);
+    int sc = socket(AF_INET, SOCK_STREAM,0);
+    if(0 > sc){
+        perror("Error opening socket");
+        return -1;
+    }
+
+    struct sockaddr_in *server_address = create_address(argv[1],PORT);
 
     socklen_t server_addr_len = (socklen_t) sizeof(*server_address);
 
